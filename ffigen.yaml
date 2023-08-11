@@ -1,19 +1,24 @@
 # Run with `flutter pub run ffigen --config ffigen.yaml`.
-name: FlutterPulseaudioBindings
+name: PulseAudio
 description: |
-  Bindings for `src/flutter_pulseaudio.h`.
+  Bindings for `libpulse`.
 
   Regenerate bindings with `flutter pub run ffigen --config ffigen.yaml`.
-output: 'lib/flutter_pulseaudio_bindings_generated.dart'
+output: 'lib/src/pulseaudio_bindings.dart'
 headers:
   entry-points:
-    - 'src/flutter_pulseaudio.h'
-  include-directives:
-    - 'src/flutter_pulseaudio.h'
+    - 'pulseaudio/src/pulse/**.h'
 preamble: |
   // ignore_for_file: always_specify_types
   // ignore_for_file: camel_case_types
   // ignore_for_file: non_constant_identifier_names
+  // ignore_for_file: constant_identifier_names
+  // ignore_for_file: no_leading_underscores_for_local_identifiers
+  // ignore_for_file: unused_field
 comments:
   style: any
   length: full
+functions:
+  expose-typedef:
+    include:
+      - '*'
