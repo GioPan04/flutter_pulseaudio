@@ -4,8 +4,11 @@ import 'dart:ui';
 import 'package:ffi/ffi.dart';
 import 'package:flutter_pulseaudio/src/pulseaudio_bindings.dart';
 
+// Inspired from: https://gist.github.com/jasonwhite/1df6ee4b5039358701d2
+
 class PulseAudioService {
   static final pa = PulseAudio(DynamicLibrary.open("/usr/lib64/libpulse.so.0"));
+  static const sendPortName = 'flutter_pulseaudio-port';
 
   static void init(SendPort sendPort) {
     print("Creating PulseAudio connection");
@@ -18,8 +21,7 @@ class PulseAudioService {
 
     pa.pa_context_connect(context, nullptr, PA_CONTEXT_NOAUTOSPAWN, nullptr);
 
-    IsolateNameServer.removePortNameMapping("test");
-    IsolateNameServer.registerPortWithName(sendPort, "test");
+    IsolateNameServer.registerPortWithName(sendPort, sendPortName);
 
     pa.pa_context_set_state_callback(
       context,
@@ -46,6 +48,18 @@ class PulseAudioService {
         pa.pa_context_get_server_info(
           context,
           Pointer.fromFunction(_serverInfoCallback),
+          userdata,
+        );
+
+        pa.pa_context_set_subscribe_callback(
+          context,
+          Pointer.fromFunction(subscribe_callback),
+          userdata,
+        );
+        pa.pa_context_subscribe(
+          context,
+          PA_SUBSCRIPTION_MASK_SINK,
+          nullptr,
           userdata,
         );
         break;
@@ -79,8 +93,41 @@ class PulseAudioService {
   ) {
     // The first call doesn't have info of the sink
     if (sink.address != nullptr.address) {
-      final sendPort = IsolateNameServer.lookupPortByName("test");
-      sendPort?.send(sink.ref.description.cast<Utf8>().toDartString());
+      final sendPort = IsolateNameServer.lookupPortByName(sendPortName);
+
+      final device = sink.ref;
+      using((Arena arena) {
+        final volumePointer = arena<pa_cvolume>();
+        volumePointer.ref = device.volume;
+        final state = {
+          'sink': device.description.cast<Utf8>().toDartString(),
+          'volume': pa.pa_cvolume_avg(volumePointer) / PA_VOLUME_NORM
+        };
+        sendPort?.send(state);
+      });
     }
+  }
+
+  static void subscribe_callback(
+    Pointer<pa_context> context,
+    int type,
+    int idx,
+    Pointer<Void> userdata,
+  ) {
+    final facility = type & PA_SUBSCRIPTION_EVENT_FACILITY_MASK;
+    Pointer<pa_operation> op = nullptr;
+
+    switch (facility) {
+      case PA_SUBSCRIPTION_EVENT_SINK:
+        op = pa.pa_context_get_sink_info_by_index(
+          context,
+          idx,
+          Pointer.fromFunction(_sinkInfoCallback),
+          userdata,
+        );
+        break;
+    }
+
+    if (op.address != nullptr.address) pa.pa_operation_unref(op);
   }
 }

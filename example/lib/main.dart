@@ -30,13 +30,14 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
           title: const Text('Native Packages'),
         ),
-        body: FutureBuilder(
-            future: receivePort.first,
+        body: StreamBuilder(
+            stream: receivePort,
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
                 return const Center(
@@ -44,7 +45,12 @@ class _MyAppState extends State<MyApp> {
                 );
               }
               return Center(
-                child: Text(snapshot.data),
+                child: Text(
+                  snapshot.data['sink'] +
+                      ': ' +
+                      (snapshot.data['volume'] as double).toStringAsFixed(2),
+                  style: theme.textTheme.titleLarge,
+                ),
               );
             }),
         floatingActionButton: FloatingActionButton(
