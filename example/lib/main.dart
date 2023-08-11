@@ -32,16 +32,21 @@ class _MyAppState extends State<MyApp> {
                 );
               }
               return Center(
-                child: Text(
-                  "${snapshot.data?.name}: ${snapshot.data?.volume.toStringAsFixed(2)}",
-                  style: theme.textTheme.titleLarge,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "${snapshot.data?.name}: ${snapshot.data?.volume.toStringAsFixed(2)}",
+                      style: theme.textTheme.titleLarge,
+                    ),
+                    Slider(
+                      value: snapshot.data!.volume,
+                      onChanged: (value) => PulseAudio.setVolume(value),
+                    )
+                  ],
                 ),
               );
             }),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () => print("Dart"),
-          child: const Icon(Icons.abc),
-        ),
       ),
     );
   }

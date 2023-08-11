@@ -89,16 +89,14 @@ class PulseAudioService {
     // The first call doesn't have info of the sink
     if (sink.address != nullptr.address) {
       final sendPort = IsolateNameServer.lookupPortByName(sendPortName);
-
       final device = sink.ref;
       using((Arena arena) {
         final volumePointer = arena<pa_cvolume>();
         volumePointer.ref = device.volume;
-
         sendPort?.send(PulseResponse(
           type: PulseResponseType.sinkEvent,
           body: SinkDevice(
-            name: device.description.cast<Utf8>().toDartString(),
+            name: device.name.cast<Utf8>().toDartString(),
             volume: pa.pa_cvolume_avg(volumePointer) / PA_VOLUME_NORM,
           ),
         ));

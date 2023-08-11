@@ -10,5 +10,5 @@ final class PulseResponse {
 
 enum PulseResponseType {
   /// Yielded when a output sink updates
-  sinkEvent
+  sinkEvent,
 }
