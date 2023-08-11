@@ -10,6 +10,9 @@ import 'package:flutter_pulseaudio/src/pulseaudio_service.dart';
 
 class PulseAudio {
   static final _defaultSinkStream = StreamController<SinkDevice>();
+
+  /// Subscribe to this stream to be notified when the default sink device it's
+  /// updated (like volume, default sink device changed)
   static Stream<SinkDevice> get defaultSinkStream => _defaultSinkStream.stream;
 
   /// Create a new PulseAudio app with a given name
@@ -34,6 +37,7 @@ class PulseAudio {
     data = data as PulseResponse;
 
     switch (data.type) {
+      // TODO: Check if the volume or name was updated. We could receive an event even for other things.
       case PulseResponseType.sinkEvent:
         _defaultSinkStream.add(data.body!);
         break;
