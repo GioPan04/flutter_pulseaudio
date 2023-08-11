@@ -22,7 +22,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     Isolate.spawn(
-      (sendPort) => PulseAudioService.init(sendPort),
+      (sendPort) => PulseAudio.init(sendPort),
       receivePort.sendPort,
       debugName: "PulseAudio Isolate",
     );
