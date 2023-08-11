@@ -24,7 +24,7 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Native Packages'),
         ),
         body: StreamBuilder(
-            stream: PulseAudio.port,
+            stream: PulseAudio.defaultSinkStream,
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
                 return const Center(
@@ -33,9 +33,7 @@ class _MyAppState extends State<MyApp> {
               }
               return Center(
                 child: Text(
-                  snapshot.data['sink'] +
-                      ': ' +
-                      (snapshot.data['volume'] as double).toStringAsFixed(2),
+                  "${snapshot.data?.name}: ${snapshot.data?.volume.toStringAsFixed(2)}",
                   style: theme.textTheme.titleLarge,
                 ),
               );

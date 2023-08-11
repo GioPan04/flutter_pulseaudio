@@ -1,6 +1,8 @@
 import 'dart:ffi';
 import 'dart:ui';
 import 'package:ffi/ffi.dart';
+import 'package:flutter_pulseaudio/src/models/pulse_response.dart';
+import 'package:flutter_pulseaudio/src/models/sink_device.dart';
 import 'package:flutter_pulseaudio/src/pulseaudio_bindings.dart';
 
 class PulseAudioService {
@@ -92,11 +94,14 @@ class PulseAudioService {
       using((Arena arena) {
         final volumePointer = arena<pa_cvolume>();
         volumePointer.ref = device.volume;
-        final state = {
-          'sink': device.description.cast<Utf8>().toDartString(),
-          'volume': pa.pa_cvolume_avg(volumePointer) / PA_VOLUME_NORM
-        };
-        sendPort?.send(state);
+
+        sendPort?.send(PulseResponse(
+          type: PulseResponseType.sinkEvent,
+          body: SinkDevice(
+            name: device.description.cast<Utf8>().toDartString(),
+            volume: pa.pa_cvolume_avg(volumePointer) / PA_VOLUME_NORM,
+          ),
+        ));
       });
     }
   }
