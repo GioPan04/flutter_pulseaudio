@@ -1,5 +1,5 @@
 # Run with `flutter pub run ffigen --config ffigen.yaml`.
-name: PulseAudio
+name: CPulseAudio
 description: |
   Bindings for `libpulse`.
 
@@ -18,7 +18,3 @@ preamble: |
 comments:
   style: any
   length: full
-functions:
-  expose-typedef:
-    include:
-      - '*'

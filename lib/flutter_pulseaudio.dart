@@ -7,7 +7,8 @@ import 'package:flutter_pulseaudio/src/pulseaudio_bindings.dart';
 // Inspired from: https://gist.github.com/jasonwhite/1df6ee4b5039358701d2
 
 class PulseAudioService {
-  static final pa = PulseAudio(DynamicLibrary.open("/usr/lib64/libpulse.so.0"));
+  static final pa =
+      CPulseAudio(DynamicLibrary.open("/usr/lib64/libpulse.so.0"));
   static const sendPortName = 'flutter_pulseaudio-port';
 
   static void init(SendPort sendPort) {
@@ -53,7 +54,7 @@ class PulseAudioService {
 
         pa.pa_context_set_subscribe_callback(
           context,
-          Pointer.fromFunction(subscribe_callback),
+          Pointer.fromFunction(_subscribeCallback),
           userdata,
         );
         pa.pa_context_subscribe(
@@ -108,7 +109,7 @@ class PulseAudioService {
     }
   }
 
-  static void subscribe_callback(
+  static void _subscribeCallback(
     Pointer<pa_context> context,
     int type,
     int idx,
