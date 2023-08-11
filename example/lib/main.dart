@@ -1,10 +1,9 @@
-import 'dart:isolate';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_pulseaudio/flutter_pulseaudio.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  PulseAudio.init('Flutter PulseAudio Example');
   runApp(const MyApp());
 }
 
@@ -16,18 +15,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final ReceivePort receivePort = ReceivePort();
-
-  @override
-  void initState() {
-    super.initState();
-    Isolate.spawn(
-      (sendPort) => PulseAudio.init(sendPort),
-      receivePort.sendPort,
-      debugName: "PulseAudio Isolate",
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -37,7 +24,7 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Native Packages'),
         ),
         body: StreamBuilder(
-            stream: receivePort,
+            stream: PulseAudio.port,
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
                 return const Center(

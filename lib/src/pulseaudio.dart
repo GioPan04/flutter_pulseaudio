@@ -7,22 +7,34 @@ import 'package:flutter_pulseaudio/src/pulseaudio_bindings.dart';
 // Inspired from: https://gist.github.com/jasonwhite/1df6ee4b5039358701d2
 
 class PulseAudio {
-  static final pa =
-      CPulseAudio(DynamicLibrary.open("/usr/lib64/libpulse.so.0"));
+  static final CPulseAudio pa = CPulseAudio(
+    DynamicLibrary.open(
+      "/usr/lib64/libpulse.so.0",
+    ),
+  );
   static const sendPortName = 'flutter_pulseaudio-port';
+  static late ReceivePort port;
 
-  static void init(SendPort sendPort) {
+  /// Create a new PulseAudio app with a given name
+  /// This function must be called in runApp once.
+  static void init(String pulseAudioName) {
+    port = ReceivePort();
+    IsolateNameServer.registerPortWithName(port.sendPort, sendPortName);
+
+    Isolate.spawn<String>(
+      _init,
+      pulseAudioName,
+      debugName: "PulseAudio Isolate",
+    );
+  }
+
+  static void _init(String name) async {
     print("Creating PulseAudio connection");
     final mainloop = pa.pa_mainloop_new();
     final mainloopApi = pa.pa_mainloop_get_api(mainloop);
-    final context = pa.pa_context_new(
-      mainloopApi,
-      'OpenCarStereo PulseAudio'.toNativeUtf8().cast(),
-    );
+    final context = pa.pa_context_new(mainloopApi, name.toNativeUtf8().cast());
 
     pa.pa_context_connect(context, nullptr, PA_CONTEXT_NOAUTOSPAWN, nullptr);
-
-    IsolateNameServer.registerPortWithName(sendPort, sendPortName);
 
     pa.pa_context_set_state_callback(
       context,
