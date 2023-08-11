@@ -8,4 +8,7 @@ final class PulseResponse {
   });
 }
 
-enum PulseResponseType { sinkEvent }
+enum PulseResponseType {
+  /// Yielded when a output sink updates
+  sinkEvent
+}
