@@ -17,15 +17,14 @@ class PulseAudioService {
     );
 
     pa.pa_context_connect(context, nullptr, PA_CONTEXT_NOAUTOSPAWN, nullptr);
-    final p = malloc<Int64>();
-    print("Port: ${sendPort.nativePort}");
-    p.value = sendPort.nativePort;
+
+    IsolateNameServer.removePortNameMapping("test");
     IsolateNameServer.registerPortWithName(sendPort, "test");
 
     pa.pa_context_set_state_callback(
       context,
       Pointer.fromFunction(_contextSetState),
-      p.cast<Void>(),
+      nullptr,
     );
 
     final ret = calloc<Int>();
@@ -33,7 +32,9 @@ class PulseAudioService {
   }
 
   static void _contextSetState(
-      Pointer<pa_context> context, Pointer<Void> userdata) {
+    Pointer<pa_context> context,
+    Pointer<Void> userdata,
+  ) {
     switch (pa.pa_context_get_state(context)) {
       case PA_CONTEXT_CONNECTING:
       case PA_CONTEXT_AUTHORIZING:
@@ -41,6 +42,7 @@ class PulseAudioService {
         break;
       case PA_CONTEXT_READY:
         print("Connection to PulseAudio established");
+        // When we connect we fetch the default sink name
         pa.pa_context_get_server_info(
           context,
           Pointer.fromFunction(_serverInfoCallback),
@@ -51,8 +53,8 @@ class PulseAudioService {
         print("Connection to PulseAudio terminated");
         break;
       case PA_CONTEXT_FAILED:
-        print(
-            "Connection failure: ${pa.pa_strerror(pa.pa_context_errno(context))}");
+        final error = pa.pa_strerror(pa.pa_context_errno(context));
+        print("Connection failure: $error");
     }
   }
 
@@ -75,15 +77,10 @@ class PulseAudioService {
     int eol,
     Pointer<Void> userdata,
   ) {
+    // The first call doesn't have info of the sink
     if (sink.address != nullptr.address) {
-      print("${userdata.cast<Int64>().value}");
       final sendPort = IsolateNameServer.lookupPortByName("test");
-
       sendPort?.send(sink.ref.description.cast<Utf8>().toDartString());
-
-      // sendPort.send(sink.ref.description.cast<Utf8>().toDartString());
-      print(
-          "Default device: ${sink.ref.description.cast<Utf8>().toDartString()}");
     }
   }
 }
